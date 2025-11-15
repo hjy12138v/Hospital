@@ -15,6 +15,28 @@ namespace His_Server.Api
 
             // Add services to the container.
 
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins")
+                .Get<string[]>() ?? Array.Empty<string>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("Default", policy =>
+                {
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials()
+                          .SetPreflightMaxAge(TimeSpan.FromHours(1));
+                });
+                options.AddPolicy("DevOpen", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+                });
+            });
+
+
             builder.Services.AddControllers();
             // 配置SqlSugar数据库客户端（通过appsettings.json读取连接字符串）
             var connectionString = builder.Configuration.GetConnectionString("HisDbConnection");
@@ -53,10 +75,15 @@ namespace His_Server.Api
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                app.UseCors("DevOpen");
                app.UseSwaggetExt();
             }
+            else
+            {
+                app.UseCors("Default");
+            }
 
-            app.UseAuthorization();
+                app.UseAuthorization();
 
 
             app.MapControllers();

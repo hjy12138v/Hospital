@@ -71,3 +71,12 @@ npm run test:e2e -- --debug
 ```sh
 npm run lint
 ```
+ 技术栈
+Vue 3：主流渐进式前端框架，采用 Composition API。
+Vite：新一代前端构建工具，开发体验快，热更新迅速。
+Element Plus：基于 Vue 3 的企业级 UI 组件库。
+Pinia：Vue 官方推荐的状态管理库，替代 Vuex。
+TypeScript：类型安全，提升开发效率和代码质量。
+Vue Router：页面路由管理，支持多角色权限控制。
+Vitest：单元测试框架。
+Playwright：端到端自动化测试。
