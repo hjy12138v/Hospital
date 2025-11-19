@@ -1,0 +1,185 @@
+import http from './http'
+
+// 用户管理 API
+export const userAPI = {
+  async getUsers() {
+    const res = await http.get('/api/User')
+    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+  },
+  async getUserById(id: number) {
+    const res = await http.get(`/api/User/${id}`)
+    return { data: res }
+  },
+  async addUser(user: unknown) {
+    const res = await http.post('/api/User', user)
+    return { data: res }
+  },
+  async updateUser(id: number, user: unknown) {
+    const res = await http.put(`/api/User/${id}`, user)
+    return { data: res }
+  },
+  async deleteUser(id: number) {
+    const res = await http.delete(`/api/User/${id}`)
+    return { data: res }
+  },
+}
+
+// 医生管理 API
+export const doctorAPI = {
+  async getDoctors() {
+    const rawDoctors = await http.get('/api/Doctor')
+    const doctors = Array.isArray(rawDoctors) ? rawDoctors : (rawDoctors?.data ?? [])
+
+    // 取用户与科室字典，做聚合映射
+    const [usersRes, departmentsRes] = await Promise.all([
+      http.get('/api/User'),
+      http.get('/api/Department'),
+    ])
+    const users = Array.isArray(usersRes) ? usersRes : (usersRes?.data ?? [])
+    const departments = Array.isArray(departmentsRes) ? departmentsRes : (departmentsRes?.data ?? [])
+
+    const userMap = new Map<number, any>()
+    for (const u of users as any[]) {
+      const id = (u.id ?? u.userId) as number
+      userMap.set(id, u)
+    }
+
+    const deptMap = new Map<number, any>()
+    for (const d of departments as any[]) {
+      const id = (d.id ?? d.departmentId) as number
+      const name = d.name ?? d.departmentName ?? d.deptName ?? ''
+      deptMap.set(id, { ...d, name })
+    }
+
+    const normalized = (doctors as any[]).map((d) => {
+      const id = d.doctorId ?? d.id
+      const user = userMap.get(d.userId)
+      const dept = deptMap.get(d.departmentId)
+      return {
+        id: id as number,
+        name: user?.name ?? user?.realName ?? '',
+        department: dept?.name ?? '',
+        title: d.position ?? d.title ?? '',
+        phone: user?.phone ?? user?.mobile ?? '',
+        email: user?.email ?? '',
+        schedule: d.schedule ?? d.dutyTime ?? d.outpatientTime ?? '',
+      }
+    })
+
+    return { data: normalized }
+  },
+  async getDoctorById(id: number) {
+    const res = await http.get(`/api/Doctor/${id}`)
+    return { data: res }
+  },
+  async addDoctor(doctor: unknown) {
+    const res = await http.post('/api/Doctor', doctor)
+    return { data: res }
+  },
+  async updateDoctor(id: number, doctor: unknown) {
+    const res = await http.put(`/api/Doctor/${id}`, doctor)
+    return { data: res }
+  },
+  async deleteDoctor(id: number) {
+    const res = await http.delete(`/api/Doctor/${id}`)
+    return { data: res }
+  },
+}
+
+// 科室管理 API
+export const departmentAPI = {
+  async getDepartments() {
+    const res = await http.get('/api/Department')
+    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+  },
+  async getDepartmentById(id: number) {
+    const res = await http.get(`/api/Department/${id}`)
+    return { data: res }
+  },
+  async addDepartment(department: unknown) {
+    const res = await http.post('/api/Department', department)
+    return { data: res }
+  },
+  async updateDepartment(id: number, department: unknown) {
+    const res = await http.put(`/api/Department/${id}`, department)
+    return { data: res }
+  },
+  async deleteDepartment(id: number) {
+    const res = await http.delete(`/api/Department/${id}`)
+    return { data: res }
+  },
+}
+
+// 药品管理 API
+export const medicineAPI = {
+  async getMedicines() {
+    const res = await http.get('/api/Medicine')
+    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+  },
+  async getMedicineById(id: number) {
+    const res = await http.get(`/api/Medicine/${id}`)
+    return { data: res }
+  },
+  async addMedicine(medicine: unknown) {
+    const res = await http.post('/api/Medicine', medicine)
+    return { data: res }
+  },
+  async updateMedicine(id: number, medicine: unknown) {
+    const res = await http.put(`/api/Medicine/${id}`, medicine)
+    return { data: res }
+  },
+  async deleteMedicine(id: number) {
+    const res = await http.delete(`/api/Medicine/${id}`)
+    return { data: res }
+  },
+}
+
+// 通知管理 API
+export const noticeAPI = {
+  async getNotices() {
+    const res = await http.get('/api/Notice')
+    const list = Array.isArray(res) ? res : (res?.data ?? res?.items ?? [])
+
+    const typeMap: Record<string, 'info' | 'warning' | 'success' | 'error'> = {
+      系统公告: 'info',
+      门诊通知: 'warning',
+      药品通知: 'success',
+      活动通知: 'success',
+      质控通知: 'warning',
+      培训通知: 'info',
+    }
+
+    const normalized = (list as any[]).map((n) => {
+      const publishTime = n.publishTime ?? n.PublishTime ?? n.publish_time ?? n.publishDate ?? ''
+      const rawType: string = n.type ?? n.Type ?? ''
+      const mappedType = typeMap[rawType] ?? 'info'
+      const isPublished = (n.isPublished ?? n.isPublish ?? n.IsPublished)
+        ?? Boolean(publishTime)
+      return {
+        id: n.id ?? n.noticeId ?? n.Id,
+        title: n.title ?? n.noticeTitle ?? n.Title ?? '',
+        content: n.content ?? n.noticeContent ?? n.Content ?? '',
+        type: mappedType,
+        isPublished,
+        publishTime,
+      }
+    })
+    return { data: normalized }
+  },
+  async getNoticeById(id: number) {
+    const res = await http.get(`/api/Notice/${id}`)
+    return { data: res }
+  },
+  async addNotice(notice: unknown) {
+    const res = await http.post('/api/Notice', notice)
+    return { data: res }
+  },
+  async updateNotice(id: number, notice: unknown) {
+    const res = await http.put(`/api/Notice/${id}`, notice)
+    return { data: res }
+  },
+  async deleteNotice(id: number) {
+    const res = await http.delete(`/api/Notice/${id}`)
+    return { data: res }
+  },
+}

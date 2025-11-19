@@ -186,7 +186,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { noticeAPI } from '@/api'
+import { noticeAPI } from '@/api/resources'
+import type { Notice } from '@/types/models'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -194,8 +195,8 @@ const viewDialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
 
-const notices = ref<any[]>([])
-const selectedNotice = ref<any>(null)
+const notices = ref<Notice[]>([])
+const selectedNotice = ref<Notice | null>(null)
 
 const searchForm = reactive({
   title: '',
@@ -281,13 +282,13 @@ const showAddDialog = () => {
   dialogVisible.value = true
 }
 
-const showEditDialog = (row: any) => {
+const showEditDialog = (row: Notice) => {
   isEdit.value = true
   Object.assign(form, row)
   dialogVisible.value = true
 }
 
-const showViewDialog = (row: any) => {
+const showViewDialog = (row: Notice) => {
   selectedNotice.value = row
   viewDialogVisible.value = true
 }
@@ -319,12 +320,13 @@ const handleSubmit = async () => {
     
     dialogVisible.value = false
     loadNotices()
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '操作失败'
+    ElMessage.error(message)
   }
 }
 
-const togglePublish = async (row: any) => {
+const togglePublish = async (row: Notice) => {
   try {
     const action = row.isPublished ? '取消发布' : '发布'
     await ElMessageBox.confirm(
@@ -344,14 +346,15 @@ const togglePublish = async (row: any) => {
     
     ElMessage.success(`${action}成功`)
     loadNotices()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '操作失败')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      const message = err instanceof Error ? err.message : '操作失败'
+      ElMessage.error(message)
     }
   }
 }
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: Notice) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除通知 "${row.title}" 吗？`,
@@ -366,9 +369,10 @@ const handleDelete = async (row: any) => {
     await noticeAPI.deleteNotice(row.id)
     ElMessage.success('删除成功')
     loadNotices()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      const message = err instanceof Error ? err.message : '删除失败'
+      ElMessage.error(message)
     }
   }
 }

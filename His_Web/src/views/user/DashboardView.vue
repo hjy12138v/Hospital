@@ -146,7 +146,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { Calendar, User, Bell, Document, Warning, Sunny, Coffee } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { appointmentAPI, noticeAPI } from '@/api'
+import { appointmentAPI } from '@/api'
+import { noticeAPI } from '@/api/resources'
 
 const authStore = useAuthStore()
 

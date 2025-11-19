@@ -97,14 +97,15 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { departmentAPI } from '@/api'
+import { departmentAPI } from '@/api/resources'
+import type { Department } from '@/types/models'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
 
-const departments = ref<any[]>([])
+const departments = ref<Department[]>([])
 
 const searchForm = reactive({
   name: ''
@@ -155,7 +156,7 @@ const showAddDialog = () => {
   dialogVisible.value = true
 }
 
-const showEditDialog = (row: any) => {
+const showEditDialog = (row: Department) => {
   isEdit.value = true
   Object.assign(form, row)
   dialogVisible.value = true
@@ -187,12 +188,13 @@ const handleSubmit = async () => {
     
     dialogVisible.value = false
     loadDepartments()
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '操作失败'
+    ElMessage.error(message)
   }
 }
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: Department) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除科室 "${row.name}" 吗？`,
@@ -207,9 +209,10 @@ const handleDelete = async (row: any) => {
     await departmentAPI.deleteDepartment(row.id)
     ElMessage.success('删除成功')
     loadDepartments()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      const message = err instanceof Error ? err.message : '删除失败'
+      ElMessage.error(message)
     }
   }
 }

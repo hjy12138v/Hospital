@@ -150,14 +150,15 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { medicineAPI } from '@/api'
+import { medicineAPI } from '@/api/resources'
+import type { Medicine } from '@/types/models'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
 
-const medicines = ref<any[]>([])
+const medicines = ref<Medicine[]>([])
 
 const searchForm = reactive({
   name: '',
@@ -222,7 +223,7 @@ const showAddDialog = () => {
   dialogVisible.value = true
 }
 
-const showEditDialog = (row: any) => {
+const showEditDialog = (row: Medicine) => {
   isEdit.value = true
   Object.assign(form, row)
   dialogVisible.value = true
@@ -257,12 +258,13 @@ const handleSubmit = async () => {
     
     dialogVisible.value = false
     loadMedicines()
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '操作失败'
+    ElMessage.error(message)
   }
 }
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: Medicine) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除药品 "${row.name}" 吗？`,
@@ -277,9 +279,10 @@ const handleDelete = async (row: any) => {
     await medicineAPI.deleteMedicine(row.id)
     ElMessage.success('删除成功')
     loadMedicines()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      const message = err instanceof Error ? err.message : '删除失败'
+      ElMessage.error(message)
     }
   }
 }

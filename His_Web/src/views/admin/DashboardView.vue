@@ -142,7 +142,8 @@
 import { ref, onMounted } from 'vue'
 import { User, UserFilled, OfficeBuilding, FirstAidKit, Bell } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { doctorAPI, departmentAPI, medicineAPI, noticeAPI, patientAPI } from '@/api'
+import { patientAPI } from '@/api'
+import { doctorAPI, departmentAPI, medicineAPI, noticeAPI } from '@/api/resources'
 
 const authStore = useAuthStore()
 

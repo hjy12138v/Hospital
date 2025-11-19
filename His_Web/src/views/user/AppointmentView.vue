@@ -133,7 +133,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
-import { appointmentAPI, doctorAPI, departmentAPI } from '@/api'
+import { appointmentAPI } from '@/api'
+import { doctorAPI, departmentAPI } from '@/api/resources'
 
 const authStore = useAuthStore()
 const formRef = ref<FormInstance>()

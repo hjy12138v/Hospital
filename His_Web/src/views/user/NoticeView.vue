@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { noticeAPI } from '@/api'
+import { noticeAPI } from '@/api/resources'
 
 const notices = ref<any[]>([])
 const dialogVisible = ref(false)

@@ -151,16 +151,16 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { departmentAPI } from '@/api'
-import { mockUsers } from '@/api/mock'
+import { departmentAPI, userAPI } from '@/api/resources'
+import type { User, Department } from '@/types/models'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
 
-const users = ref<any[]>([])
-const departments = ref<any[]>([])
+const users = ref<User[]>([])
+const departments = ref<Department[]>([])
 
 const searchForm = reactive({
   name: '',
@@ -240,9 +240,8 @@ const getRoleText = (role: string) => {
 const loadUsers = async () => {
   try {
     loading.value = true
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 300))
-    users.value = [...mockUsers]
+    const response = await userAPI.getUsers()
+    users.value = response.data
   } catch (error) {
     ElMessage.error('加载用户列表失败')
   } finally {
@@ -265,7 +264,7 @@ const showAddDialog = () => {
   dialogVisible.value = true
 }
 
-const showEditDialog = (row: any) => {
+const showEditDialog = (row: User) => {
   isEdit.value = true
   Object.assign(form, row)
   dialogVisible.value = true
@@ -292,29 +291,21 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     
     if (isEdit.value) {
-      // 更新用户
-      const index = users.value.findIndex(u => u.id === form.id)
-      if (index !== -1) {
-        users.value[index] = { ...form }
-        ElMessage.success('更新成功')
-      }
+      await userAPI.updateUser(form.id, form)
+      ElMessage.success('更新成功')
     } else {
-      // 添加用户
-      const newUser = {
-        ...form,
-        id: users.value.length + 1
-      }
-      users.value.push(newUser)
+      await userAPI.addUser(form)
       ElMessage.success('添加成功')
     }
-    
     dialogVisible.value = false
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
+    loadUsers()
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '操作失败'
+    ElMessage.error(message)
   }
 }
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: User) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除用户 "${row.name}" 吗？`,
@@ -326,14 +317,13 @@ const handleDelete = async (row: any) => {
       }
     )
     
-    const index = users.value.findIndex(u => u.id === row.id)
-    if (index !== -1) {
-      users.value.splice(index, 1)
-      ElMessage.success('删除成功')
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
+    await userAPI.deleteUser(row.id)
+    ElMessage.success('删除成功')
+    loadUsers()
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      const message = err instanceof Error ? err.message : '删除失败'
+      ElMessage.error(message)
     }
   }
 }
