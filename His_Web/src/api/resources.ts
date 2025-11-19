@@ -157,28 +157,35 @@ export const noticeAPI = {
     const res = await http.get('/api/Notice')
     const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
 
-    const typeMap: Record<string, 'info' | 'warning' | 'success' | 'error'> = {
-      系统公告: 'info',
-      门诊通知: 'warning',
-      药品通知: 'success',
-      活动通知: 'success',
-      质控通知: 'warning',
-      培训通知: 'info',
+    // 取用户列表用于 SenderId -> 发布人用户名 的映射
+    let users: any[] = []
+    try {
+      const usersRes = await http.get('/api/User')
+      users = Array.isArray(usersRes) ? usersRes : (usersRes?.data ?? usersRes?.data?.items ?? [])
+    } catch {
+      users = []
+    }
+    const userMap = new Map<number, any>()
+    for (const u of users) {
+      const id = (u.id ?? u.userId ?? u.Id) as number
+      userMap.set(id, u)
     }
 
     const normalized = (list as any[]).map((n) => {
       const publishTime = n.publishTime ?? n.PublishTime ?? n.publish_time ?? n.publishDate ?? ''
-      const rawType: string = n.type ?? n.Type ?? ''
-      const mappedType = typeMap[rawType] ?? 'info'
-      const isPublished = (n.isPublished ?? n.isPublish ?? n.IsPublished)
-        ?? Boolean(publishTime)
+      const isPublished = (n.isPublished ?? n.isPublish ?? n.IsPublished) ?? Boolean(publishTime)
+      const senderId = n.senderId ?? n.SenderId
+      const sender = senderId != null ? userMap.get(senderId as number) : undefined
+      const senderName = sender?.username ?? sender?.name ?? sender?.realName ?? ''
       return {
         id: n.id ?? n.noticeId ?? n.Id,
         title: n.title ?? n.noticeTitle ?? n.Title ?? '',
         content: n.content ?? n.noticeContent ?? n.Content ?? '',
-        type: mappedType,
+        type: n.type ?? n.Type ?? '',
         isPublished,
         publishTime,
+        senderId: senderId ?? null,
+        senderName,
       }
     })
     return { data: normalized }

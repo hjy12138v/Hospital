@@ -56,14 +56,9 @@
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="通知标题" />
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column prop="type" label="类型" width="120">
           <template #default="{ row }">
-            <el-tag
-              :type="getNoticeType(row.type)"
-              size="small"
-            >
-              {{ getNoticeTypeText(row.type) }}
-            </el-tag>
+            <el-tag size="small">{{ row.type || '—' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="publishTime" label="发布时间" width="180">
@@ -71,14 +66,9 @@
             <span class="publish-time">{{ formatTime(row.publishTime) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="isPublished" label="状态" width="100">
+        <el-table-column prop="senderName" label="发布人" width="120">
           <template #default="{ row }">
-            <el-tag
-              :type="row.isPublished ? 'success' : 'warning'"
-              size="small"
-            >
-              {{ row.isPublished ? '已发布' : '未发布' }}
-            </el-tag>
+            <span>{{ row.senderName || '—' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="160">
@@ -99,9 +89,6 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="edit">编辑</el-dropdown-item>
-                    <el-dropdown-item :command="row.isPublished ? 'unpublish' : 'publish'">
-                      {{ row.isPublished ? '取消发布' : '发布' }}
-                    </el-dropdown-item>
                     <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
@@ -166,12 +153,7 @@
     >
       <div v-if="selectedNotice" class="notice-detail">
         <div class="detail-header">
-          <el-tag
-            :type="getNoticeType(selectedNotice.type)"
-            size="small"
-          >
-            {{ getNoticeTypeText(selectedNotice.type) }}
-          </el-tag>
+          <el-tag size="small">{{ selectedNotice.type || '—' }}</el-tag>
           <span class="detail-time">{{ selectedNotice.publishTime }}</span>
         </div>
         <div class="detail-content">
@@ -235,35 +217,7 @@ const filteredNotices = computed(() => {
   })
 })
 
-const getNoticeType = (type: string) => {
-  switch (type) {
-    case 'info':
-      return 'primary'
-    case 'warning':
-      return 'warning'
-    case 'success':
-      return 'success'
-    case 'error':
-      return 'danger'
-    default:
-      return 'info'
-  }
-}
-
-const getNoticeTypeText = (type: string) => {
-  switch (type) {
-    case 'info':
-      return '通知'
-    case 'warning':
-      return '重要'
-    case 'success':
-      return '公告'
-    case 'error':
-      return '紧急'
-    default:
-      return '通知'
-  }
-}
+// 类型直接使用数据库 Notice.Type 文本，无需映射
 
 const formatTime = (value: string | number | Date | undefined) => {
   if (!value) return '-'
@@ -366,12 +320,6 @@ const onActionCommand = async (row: Notice, cmd: string) => {
   switch (cmd) {
     case 'edit':
       showEditDialog(row)
-      break
-    case 'publish':
-      await togglePublish({ ...row, isPublished: false })
-      break
-    case 'unpublish':
-      await togglePublish({ ...row, isPublished: true })
       break
     case 'delete':
       await handleDelete(row)
