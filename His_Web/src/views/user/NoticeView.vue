@@ -23,7 +23,7 @@
             {{ notice.content.substring(0, 100) }}...
           </div>
           <div class="notice-footer">
-            <span class="notice-time">{{ notice.publishTime }}</span>
+            <span class="notice-time">{{ formatTime(notice.publishTime) }}</span>
           </div>
         </div>
         
@@ -47,7 +47,7 @@
           >
             {{ getNoticeTypeText(selectedNotice.type) }}
           </el-tag>
-          <span class="detail-time">{{ selectedNotice.publishTime }}</span>
+          <span class="detail-time">{{ formatTime(selectedNotice.publishTime) }}</span>
         </div>
         <div class="detail-content">
           {{ selectedNotice.content }}
@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import dayjs from 'dayjs'
 import { noticeAPI } from '@/api/resources'
 
 const notices = ref<any[]>([])
@@ -98,6 +99,13 @@ const getNoticeTypeText = (type: string) => {
 const showNoticeDetail = (notice: any) => {
   selectedNotice.value = notice
   dialogVisible.value = true
+}
+
+const formatTime = (value: string | number | Date | undefined) => {
+  if (!value) return '-'
+  const d = dayjs(value)
+  if (!d.isValid()) return '-'
+  return d.format('YYYY-MM-DD HH:mm')
 }
 
 const loadNotices = async () => {

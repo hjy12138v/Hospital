@@ -66,7 +66,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="publishTime" label="发布时间" />
+        <el-table-column prop="publishTime" label="发布时间" width="180">
+          <template #default="{ row }">
+            <span class="publish-time">{{ formatTime(row.publishTime) }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="isPublished" label="状态" width="100">
           <template #default="{ row }">
             <el-tag
@@ -77,36 +81,32 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column label="操作" width="160">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              @click="showViewDialog(row)"
-            >
-              查看
-            </el-button>
-            <el-button
-              type="success"
-              size="small"
-              @click="showEditDialog(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              :type="row.isPublished ? 'warning' : 'info'"
-              size="small"
-              @click="togglePublish(row)"
-            >
-              {{ row.isPublished ? '取消发布' : '发布' }}
-            </el-button>
-            <el-button
-              type="danger"
-              size="small"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <div class="actions">
+              <el-button
+                type="primary"
+                size="small"
+                @click="showViewDialog(row)"
+              >
+                查看
+              </el-button>
+              <el-dropdown @command="(cmd: string) => onActionCommand(row, cmd)">
+                <el-button size="small">
+                  更多操作
+                  <el-icon style="margin-left:4px"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                    <el-dropdown-item :command="row.isPublished ? 'unpublish' : 'publish'">
+                      {{ row.isPublished ? '取消发布' : '发布' }}
+                    </el-dropdown-item>
+                    <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -185,9 +185,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, ArrowDown } from '@element-plus/icons-vue'
 import { noticeAPI } from '@/api/resources'
 import type { Notice } from '@/types/models'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -262,6 +263,13 @@ const getNoticeTypeText = (type: string) => {
     default:
       return '通知'
   }
+}
+
+const formatTime = (value: string | number | Date | undefined) => {
+  if (!value) return '-'
+  const d = dayjs(value)
+  if (!d.isValid()) return '-'
+  return d.format('YYYY-MM-DD HH:mm')
 }
 
 const loadNotices = async () => {
@@ -354,6 +362,23 @@ const togglePublish = async (row: Notice) => {
   }
 }
 
+const onActionCommand = async (row: Notice, cmd: string) => {
+  switch (cmd) {
+    case 'edit':
+      showEditDialog(row)
+      break
+    case 'publish':
+      await togglePublish({ ...row, isPublished: false })
+      break
+    case 'unpublish':
+      await togglePublish({ ...row, isPublished: true })
+      break
+    case 'delete':
+      await handleDelete(row)
+      break
+  }
+}
+
 const handleDelete = async (row: Notice) => {
   try {
     await ElMessageBox.confirm(
@@ -433,6 +458,16 @@ onMounted(() => {
 .detail-time {
   font-size: 14px;
   color: #909399;
+}
+
+.publish-time {
+  color: #606266;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .detail-content {
