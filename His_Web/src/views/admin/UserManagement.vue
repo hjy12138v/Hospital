@@ -45,20 +45,17 @@
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="姓名" />
-        <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="role" label="角色" width="100">
+        <el-table-column prop="gender" label="性别" width="80" />
+        <el-table-column prop="roleId" label="角色" width="100">
           <template #default="{ row }">
-            <el-tag
-              :type="getRoleType(row.role)"
-              size="small"
-            >
-              {{ getRoleText(row.role) }}
+            <el-tag :type="getRoleTypeById(row.roleId)" size="small">
+              {{ getRoleTextById(row.roleId) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="电话" />
         <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="department" label="科室" />
+        <el-table-column prop="dateOfBirth" label="出生日期" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button
@@ -95,8 +92,11 @@
         <el-form-item label="姓名" prop="name">
           <el-input v-model="form.name" placeholder="请输入用户姓名" />
         </el-form-item>
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+        <el-form-item label="性别" prop="gender">
+          <el-select v-model="form.gender" placeholder="请选择性别" style="width: 100%">
+            <el-option label="男" value="男" />
+            <el-option label="女" value="女" />
+          </el-select>
         </el-form-item>
         <el-form-item label="密码" prop="password" v-if="!isEdit">
           <el-input
@@ -106,15 +106,15 @@
             show-password
           />
         </el-form-item>
-        <el-form-item label="角色" prop="role">
+        <el-form-item label="角色" prop="roleId">
           <el-select
-            v-model="form.role"
+            v-model="form.roleId"
             placeholder="请选择角色"
             style="width: 100%"
           >
-            <el-option label="患者" value="user" />
-            <el-option label="医生" value="doctor" />
-            <el-option label="管理员" value="admin" />
+            <el-option label="用户" value="1" />
+            <el-option label="医生" value="2" />
+            <el-option label="管理员" value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="电话" prop="phone">
@@ -123,20 +123,7 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱地址" />
         </el-form-item>
-        <el-form-item label="科室" prop="department" v-if="form.role === 'doctor'">
-          <el-select
-            v-model="form.department"
-            placeholder="请选择科室"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="dept in departments"
-              :key="dept.id"
-              :label="dept.name"
-              :value="dept.name"
-            />
-          </el-select>
-        </el-form-item>
+        
       </el-form>
       
       <template #footer>
@@ -151,8 +138,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { departmentAPI, userAPI } from '@/api/resources'
-import type { User, Department } from '@/types/models'
+import { userAPI } from '@/api/resources'
+import type { User } from '@/types/models'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -160,7 +147,6 @@ const isEdit = ref(false)
 const formRef = ref<FormInstance>()
 
 const users = ref<User[]>([])
-const departments = ref<Department[]>([])
 
 const searchForm = reactive({
   name: '',
@@ -170,26 +156,26 @@ const searchForm = reactive({
 const form = reactive({
   id: 0,
   name: '',
-  username: '',
+  gender: '',
   password: '',
-  role: '',
+  roleId: 1,
   phone: '',
   email: '',
-  department: ''
+  dateOfBirth: ''
 })
 
 const rules = {
   name: [
     { required: true, message: '请输入用户姓名', trigger: 'blur' }
   ],
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
   ],
-  role: [
+  roleId: [
     { required: true, message: '请选择角色', trigger: 'change' }
   ],
   phone: [
@@ -211,27 +197,27 @@ const filteredUsers = computed(() => {
   })
 })
 
-const getRoleType = (role: string) => {
-  switch (role) {
-    case 'admin':
+const getRoleTypeById = (roleId: number) => {
+  switch (roleId) {
+    case 3:
       return 'danger'
-    case 'doctor':
+    case 2:
       return 'warning'
-    case 'user':
+    case 1:
       return 'success'
     default:
       return 'info'
   }
 }
 
-const getRoleText = (role: string) => {
-  switch (role) {
-    case 'admin':
+const getRoleTextById = (roleId: number) => {
+  switch (roleId) {
+    case 3:
       return '管理员'
-    case 'doctor':
+    case 2:
       return '医生'
-    case 'user':
-      return '患者'
+    case 1:
+      return '用户'
     default:
       return '未知'
   }
@@ -249,14 +235,6 @@ const loadUsers = async () => {
   }
 }
 
-const loadDepartments = async () => {
-  try {
-    const response = await departmentAPI.getDepartments()
-    departments.value = response.data
-  } catch (error) {
-    ElMessage.error('加载科室列表失败')
-  }
-}
 
 const showAddDialog = () => {
   isEdit.value = false
@@ -274,12 +252,12 @@ const resetForm = () => {
   Object.assign(form, {
     id: 0,
     name: '',
-    username: '',
+    gender: '',
     password: '',
-    role: '',
+    roleId: 1,
     phone: '',
     email: '',
-    department: ''
+    dateOfBirth: ''
   })
   formRef.value?.clearValidate()
 }
@@ -339,7 +317,6 @@ const resetSearch = () => {
 
 onMounted(() => {
   loadUsers()
-  loadDepartments()
 })
 </script>
 

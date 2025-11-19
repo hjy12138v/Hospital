@@ -4,18 +4,57 @@ import http from './http'
 export const userAPI = {
   async getUsers() {
     const res = await http.get('/api/User')
-    return { data: Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? []) }
+    const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
+    const normalized = (list as any[]).map((u) => {
+      const roleId = Number(u.roleId ?? u.RoleId ?? 0)
+      // 保留英文角色以兼容现有权限判断/搜索
+      const role = roleId === 1 ? 'user' : roleId === 2 ? 'doctor' : roleId === 3 ? 'admin' : ''
+      return {
+        id: u.id ?? u.Id,
+        name: u.name ?? u.Name ?? '',
+        gender: u.gender ?? u.Gender ?? '',
+        phone: u.phone ?? u.phoneNumber ?? u.PhoneNumber ?? '',
+        email: u.email ?? u.Email ?? '',
+        roleId,
+        role,
+        // 后端 GetAll 通常不返回密码，这里做兼容处理
+        password: u.password ?? u.Password ?? undefined,
+        dateOfBirth: u.dateOfBirth ?? u.DateOfBirth ?? '',
+      }
+    })
+    return { data: normalized }
   },
   async getUserById(id: number) {
     const res = await http.get(`/api/User/${id}`)
     return { data: res }
   },
   async addUser(user: unknown) {
-    const res = await http.post('/api/User', user)
+    const u = user as any
+    const payload = {
+      // CreateUserRequest：UserDto 字段 + Password
+      name: u.name,
+      gender: u.gender,
+      phoneNumber: u.phone,
+      email: u.email,
+      roleId: u.roleId,
+      dateOfBirth: u.dateOfBirth ?? undefined,
+      password: u.password,
+    }
+    const res = await http.post('/api/User', payload)
     return { data: res }
   },
   async updateUser(id: number, user: unknown) {
-    const res = await http.put(`/api/User/${id}`, user)
+    const u = user as any
+    const payload = {
+      id,
+      name: u.name,
+      gender: u.gender,
+      phoneNumber: u.phone,
+      email: u.email,
+      roleId: u.roleId,
+      dateOfBirth: u.dateOfBirth ?? undefined,
+    }
+    const res = await http.put(`/api/User/${id}`, payload)
     return { data: res }
   },
   async deleteUser(id: number) {

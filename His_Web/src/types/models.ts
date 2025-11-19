@@ -1,12 +1,13 @@
 export interface User {
   id: number
   name: string
-  username: string
-  password?: string
-  role: 'user' | 'doctor' | 'admin' | string
+  gender: string
   phone: string
   email: string
-  department?: string
+  roleId: number
+  role?: 'user' | 'doctor' | 'admin' | string
+  password?: string
+  dateOfBirth?: string
 }
 
 export interface Doctor {
