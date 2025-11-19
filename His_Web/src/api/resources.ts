@@ -4,7 +4,7 @@ import http from './http'
 export const userAPI = {
   async getUsers() {
     const res = await http.get('/api/User')
-    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+    return { data: Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? []) }
   },
   async getUserById(id: number) {
     const res = await http.get(`/api/User/${id}`)
@@ -90,7 +90,14 @@ export const doctorAPI = {
 export const departmentAPI = {
   async getDepartments() {
     const res = await http.get('/api/Department')
-    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+    const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
+    const normalized = (list as any[]).map((d) => ({
+      id: d.id ?? d.departmentId ?? d.Id,
+      name: d.name ?? d.departmentName ?? d.deptName ?? '',
+      description: d.description ?? d.desc ?? d.Description ?? '',
+      location: d.location ?? d.address ?? d.Location ?? '',
+    }))
+    return { data: normalized }
   },
   async getDepartmentById(id: number) {
     const res = await http.get(`/api/Department/${id}`)
@@ -114,7 +121,17 @@ export const departmentAPI = {
 export const medicineAPI = {
   async getMedicines() {
     const res = await http.get('/api/Medicine')
-    return { data: Array.isArray(res) ? res : (res?.data ?? res?.items ?? []) }
+    const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
+    const normalized = (list as any[]).map((m) => ({
+      id: m.id ?? m.medicineId ?? m.Id,
+      name: m.name ?? m.medicineName ?? m.drugName ?? '',
+      specification: m.specification ?? m.specs ?? m.Specification ?? '',
+      price: Number(m.price ?? m.Price ?? 0),
+      stock: Number(m.stock ?? m.quantity ?? m.Stock ?? 0),
+      manufacturer: m.manufacturer ?? m.factory ?? m.Manufacturer ?? '',
+      category: m.category ?? m.type ?? m.Category ?? '',
+    }))
+    return { data: normalized }
   },
   async getMedicineById(id: number) {
     const res = await http.get(`/api/Medicine/${id}`)
@@ -138,7 +155,7 @@ export const medicineAPI = {
 export const noticeAPI = {
   async getNotices() {
     const res = await http.get('/api/Notice')
-    const list = Array.isArray(res) ? res : (res?.data ?? res?.items ?? [])
+    const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
 
     const typeMap: Record<string, 'info' | 'warning' | 'success' | 'error'> = {
       系统公告: 'info',
