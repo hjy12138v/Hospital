@@ -123,13 +123,12 @@ export const medicineAPI = {
     const res = await http.get('/api/Medicine')
     const list = Array.isArray(res) ? res : (res?.data ?? res?.data.items ?? [])
     const normalized = (list as any[]).map((m) => ({
-      id: m.id ?? m.medicineId ?? m.Id,
+      id: m.medicineId ?? m.id ?? m.Id,
       name: m.name ?? m.medicineName ?? m.drugName ?? '',
-      specification: m.specification ?? m.specs ?? m.Specification ?? '',
-      price: Number(m.price ?? m.Price ?? 0),
-      stock: Number(m.stock ?? m.quantity ?? m.Stock ?? 0),
-      manufacturer: m.manufacturer ?? m.factory ?? m.Manufacturer ?? '',
-      category: m.category ?? m.type ?? m.Category ?? '',
+      description: m.description ?? m.Description ?? '',
+      price: Number(m.unitPrice ?? m.UnitPrice ?? m.price ?? m.Price ?? 0),
+      stock: Number(m.stock ?? m.Stock ?? m.quantity ?? 0),
+      category: m.type ?? m.Type ?? m.category ?? m.Category ?? '',
     }))
     return { data: normalized }
   },
@@ -138,11 +137,29 @@ export const medicineAPI = {
     return { data: res }
   },
   async addMedicine(medicine: unknown) {
-    const res = await http.post('/api/Medicine', medicine)
+    const m = medicine as any
+    const payload = {
+      // MedicineDto fields expected by backend
+      name: m.name,
+      description: m.description,
+      stock: m.stock,
+      unitPrice: m.price,
+      type: m.category,
+    }
+    const res = await http.post('/api/Medicine', payload)
     return { data: res }
   },
   async updateMedicine(id: number, medicine: unknown) {
-    const res = await http.put(`/api/Medicine/${id}`, medicine)
+    const m = medicine as any
+    const payload = {
+      medicineId: id,
+      name: m.name,
+      description: m.description,
+      stock: m.stock,
+      unitPrice: m.price,
+      type: m.category,
+    }
+    const res = await http.put(`/api/Medicine/${id}`, payload)
     return { data: res }
   },
   async deleteMedicine(id: number) {

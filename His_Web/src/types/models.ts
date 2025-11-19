@@ -29,10 +29,9 @@ export interface Department {
 export interface Medicine {
   id: number
   name: string
-  specification: string
+  description: string
   price: number
   stock: number
-  manufacturer: string
   category: string
 }
 

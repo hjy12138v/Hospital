@@ -47,7 +47,7 @@
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="药品名称" />
-        <el-table-column prop="specification" label="规格" />
+        <el-table-column prop="description" label="描述" />
         <el-table-column prop="price" label="价格" width="100">
           <template #default="{ row }">
             ¥{{ row.price }}
@@ -63,7 +63,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="manufacturer" label="生产厂家" />
         <el-table-column prop="category" label="分类" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
@@ -101,8 +100,8 @@
         <el-form-item label="药品名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入药品名称" />
         </el-form-item>
-        <el-form-item label="规格" prop="specification">
-          <el-input v-model="form.specification" placeholder="请输入药品规格" />
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="form.description" placeholder="请输入药品描述" type="textarea" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input-number
@@ -120,9 +119,7 @@
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="生产厂家" prop="manufacturer">
-          <el-input v-model="form.manufacturer" placeholder="请输入生产厂家" />
-        </el-form-item>
+        
         <el-form-item label="分类" prop="category">
           <el-select
             v-model="form.category"
@@ -168,10 +165,9 @@ const searchForm = reactive({
 const form = reactive({
   id: 0,
   name: '',
-  specification: '',
+  description: '',
   price: 0,
   stock: 0,
-  manufacturer: '',
   category: ''
 })
 
@@ -179,17 +175,14 @@ const rules = {
   name: [
     { required: true, message: '请输入药品名称', trigger: 'blur' }
   ],
-  specification: [
-    { required: true, message: '请输入药品规格', trigger: 'blur' }
+  description: [
+    { required: true, message: '请输入药品描述', trigger: 'blur' }
   ],
   price: [
     { required: true, message: '请输入药品价格', trigger: 'blur' }
   ],
   stock: [
     { required: true, message: '请输入库存数量', trigger: 'blur' }
-  ],
-  manufacturer: [
-    { required: true, message: '请输入生产厂家', trigger: 'blur' }
   ],
   category: [
     { required: true, message: '请选择药品分类', trigger: 'change' }
@@ -233,10 +226,9 @@ const resetForm = () => {
   Object.assign(form, {
     id: 0,
     name: '',
-    specification: '',
+    description: '',
     price: 0,
     stock: 0,
-    manufacturer: '',
     category: ''
   })
   formRef.value?.clearValidate()
