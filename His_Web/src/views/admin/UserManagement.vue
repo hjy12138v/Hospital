@@ -7,23 +7,15 @@
         添加用户
       </el-button>
     </div>
-    
+
     <!-- 搜索栏 -->
     <el-card class="search-card">
       <el-form :model="searchForm" inline>
         <el-form-item label="用户姓名">
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入用户姓名"
-            clearable
-          />
+          <el-input v-model="searchForm.name" placeholder="请输入用户姓名" clearable />
         </el-form-item>
         <el-form-item label="用户类型">
-          <el-select
-            v-model="searchForm.role"
-            placeholder="请选择用户类型"
-            clearable
-          >
+          <el-select v-model="searchForm.role" placeholder="请选择用户类型" clearable>
             <el-option label="患者" value="user" />
             <el-option label="医生" value="doctor" />
             <el-option label="管理员" value="admin" />
@@ -35,14 +27,10 @@
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 用户列表 -->
     <el-card>
-      <el-table
-        v-loading="loading"
-        :data="filteredUsers"
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="filteredUsers" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="姓名" />
         <el-table-column prop="gender" label="性别" width="80" />
@@ -55,40 +43,23 @@
         </el-table-column>
         <el-table-column prop="phone" label="电话" />
         <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="dateOfBirth" label="出生日期" />
+        <el-table-column label="出生日期">
+          <template #default="{ row }">
+            {{ formatDate(row.dateOfBirth) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              @click="showEditDialog(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              type="danger"
-              size="small"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <el-button type="primary" size="small" @click="showEditDialog(row)"> 编辑 </el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
-    
+
     <!-- 添加/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑用户' : '添加用户'"
-      width="600px"
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-      >
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '添加用户'" width="600px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="姓名" prop="name">
           <el-input v-model="form.name" placeholder="请输入用户姓名" />
         </el-form-item>
@@ -107,11 +78,7 @@
           />
         </el-form-item>
         <el-form-item label="角色" prop="roleId">
-          <el-select
-            v-model="form.roleId"
-            placeholder="请选择角色"
-            style="width: 100%"
-          >
+          <el-select v-model="form.roleId" placeholder="请选择角色" style="width: 100%">
             <el-option label="用户" value="1" />
             <el-option label="医生" value="2" />
             <el-option label="管理员" value="3" />
@@ -123,9 +90,17 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱地址" />
         </el-form-item>
-        
+        <el-form-item label="出生日期" prop="dateOfBirth" v-if="!isEdit">
+          <el-date-picker
+            v-model="form.dateOfBirth"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="选择出生日期"
+            style="width: 100%"
+          />
+        </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit">确定</el-button>
@@ -150,7 +125,7 @@ const users = ref<User[]>([])
 
 const searchForm = reactive({
   name: '',
-  role: ''
+  role: '',
 })
 
 const form = reactive({
@@ -161,36 +136,42 @@ const form = reactive({
   roleId: 1,
   phone: '',
   email: '',
-  dateOfBirth: ''
+  dateOfBirth: '',
 })
 
 const rules = {
-  name: [
-    { required: true, message: '请输入用户姓名', trigger: 'blur' }
-  ],
-  gender: [
-    { required: true, message: '请选择性别', trigger: 'change' }
-  ],
+  name: [{ required: true, message: '请输入用户姓名', trigger: 'blur' }],
+  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
   ],
-  roleId: [
-    { required: true, message: '请选择角色', trigger: 'change' }
-  ],
+  roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
   phone: [
     { required: true, message: '请输入联系电话', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' },
   ],
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-  ]
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' },
+  ],
+}
+
+// 将出生日期格式化为 YYYY-MM-DD，便于阅读
+const formatDate = (value?: string) => {
+  if (!value) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return value
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 // 过滤后的用户列表
 const filteredUsers = computed(() => {
-  return users.value.filter(user => {
+  return users.value.filter((user) => {
     const nameMatch = !searchForm.name || user.name.includes(searchForm.name)
     const roleMatch = !searchForm.role || user.role === searchForm.role
     return nameMatch && roleMatch
@@ -235,7 +216,6 @@ const loadUsers = async () => {
   }
 }
 
-
 const showAddDialog = () => {
   isEdit.value = false
   resetForm()
@@ -257,17 +237,17 @@ const resetForm = () => {
     roleId: 1,
     phone: '',
     email: '',
-    dateOfBirth: ''
+    dateOfBirth: '',
   })
   formRef.value?.clearValidate()
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
-    
+
     if (isEdit.value) {
       await userAPI.updateUser(form.id, form)
       ElMessage.success('更新成功')
@@ -285,16 +265,12 @@ const handleSubmit = async () => {
 
 const handleDelete = async (row: User) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除用户 "${row.name}" 吗？`,
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm(`确定要删除用户 "${row.name}" 吗？`, '确认删除', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
     await userAPI.deleteUser(row.id)
     ElMessage.success('删除成功')
     loadUsers()
