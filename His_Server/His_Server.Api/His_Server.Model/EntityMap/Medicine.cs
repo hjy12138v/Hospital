@@ -14,10 +14,10 @@ namespace His_Server.Model.EntityMap
         public int MedicineId { get; set; }
 
         [SugarColumn(ColumnDataType = "NVARCHAR(255)")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [SugarColumn(ColumnDataType = "TEXT")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public int Stock { get; set; }
 
@@ -28,6 +28,6 @@ namespace His_Server.Model.EntityMap
         public DateTime ExpiryDate { get; set; }
 
         [SugarColumn(ColumnDataType = "NVARCHAR(50)")]
-        public string Type { get; set; }
+        public string? Type { get; set; }
     }
 }

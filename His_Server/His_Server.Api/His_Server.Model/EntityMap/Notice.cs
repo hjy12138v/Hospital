@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SqlSugar;
 
 namespace His_Server.Model.EntityMap
@@ -14,16 +9,16 @@ namespace His_Server.Model.EntityMap
         public int NoticeId { get; set; }
 
         [SugarColumn(ColumnDataType = "NVARCHAR(255)")]
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         [SugarColumn(ColumnDataType = "TEXT")]
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         [SugarColumn(ColumnDataType = "DATETIME")]
         public DateTime PublishDate { get; set; }
 
         [SugarColumn(ColumnDataType = "NVARCHAR(50)")]
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         public int SenderId { get; set; }
     }

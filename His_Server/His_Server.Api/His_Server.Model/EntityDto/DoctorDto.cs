@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace His_Server.Model.EntityDto
 {
     public class DoctorDto
@@ -11,8 +5,8 @@ namespace His_Server.Model.EntityDto
         public int DoctorId { get; set; }
         public int UserId { get; set; }
         public int DepartmentId { get; set; }
-        public string Position { get; set; }
-        public string Specialty { get; set; }
+        public string ? Position { get; set; }
+        public string ? Specialty { get; set; }
         // 可根据需要添加科室名称、医生姓名等关联信息
     }
 }
