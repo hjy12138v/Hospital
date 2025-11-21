@@ -1,6 +1,7 @@
 using His_Server.DAL.Repositories;
 using His_Server.Model.EntityDto;
 using His_Server.Model.EntityMap;
+using AutoMapper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,22 +14,24 @@ namespace His_Server.BLL.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _repository;
+        private readonly IMapper _mapper;
 
-        public UserService(IUserRepository repository)
+        public UserService(IUserRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
         public async Task<List<UserDto>> GetAllAsync()
         {
             var list = await _repository.GetAllAsync();
-            return list.Select(MapToDto).ToList();
+            return list.Select(u => _mapper.Map<UserDto>(u)).ToList();
         }
 
         public async Task<UserDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : MapToDto(entity);
+            return entity == null ? null : _mapper.Map<UserDto>(entity);
         }
 
         public async Task<int> CreateAsync(UserDto dto, string password)
@@ -39,16 +42,8 @@ namespace His_Server.BLL.Services
             if (string.IsNullOrWhiteSpace(password))
                 throw new System.ArgumentException("密码不能为空");
 
-            var entity = new User
-            {
-                Name = dto.Name,
-                Gender = dto.Gender,
-                PhoneNumber = dto.PhoneNumber,
-                Email = dto.Email,
-                RoleId = dto.RoleId,
-                DateOfBirth = dto.DateOfBirth,
-                Password = password // 生产环境建议加密存储
-            };
+            var entity = _mapper.Map<User>(dto);
+            entity.Password = password; // 生产环境建议加密存储
             var newId = await _repository.AddAsync(entity);
             return newId;
         }
@@ -58,14 +53,7 @@ namespace His_Server.BLL.Services
             var existing = await _repository.GetByIdAsync(id);
             if (existing == null) return false;
 
-            existing.Name = dto.Name;
-            existing.Gender = dto.Gender;
-            existing.PhoneNumber = dto.PhoneNumber;
-            existing.Email = dto.Email;
-            existing.RoleId = dto.RoleId;
-            existing.DateOfBirth = dto.DateOfBirth;
-            // 密码更新可单独接口，此处不改密码
-
+            _mapper.Map(dto, existing); // 不修改密码
             return await _repository.UpdateAsync(existing);
         }
 
@@ -74,18 +62,6 @@ namespace His_Server.BLL.Services
             return await _repository.DeleteAsync(id);
         }
 
-        private static UserDto MapToDto(User user)
-        {
-            return new UserDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Gender = user.Gender,
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email,
-                RoleId = user.RoleId,
-                DateOfBirth = user.DateOfBirth
-            };
-        }
+        // 映射逻辑已由 AutoMapper 承担
     }
 }

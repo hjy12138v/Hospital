@@ -1,6 +1,7 @@
 using His_Server.DAL.Repositories;
 using His_Server.Model.EntityDto;
 using His_Server.Model.EntityMap;
+using AutoMapper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,35 +14,39 @@ namespace His_Server.BLL.Services
     public class DepartmentService : IDepartmentService
     {
         private readonly IDepartmentRepository _repository;
+        private readonly IMapper _mapper;
 
-        public DepartmentService(IDepartmentRepository repository)
+        public DepartmentService(IDepartmentRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
         public async Task<List<DepartmentDto>> GetAllAsync()
         {
             var list = await _repository.GetAllAsync();
-            return list.Select(MapToDto).ToList();
+            return list.Select(d => _mapper.Map<DepartmentDto>(d)).ToList();
         }
 
         public async Task<DepartmentDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : MapToDto(entity);
+            return entity == null ? null : _mapper.Map<DepartmentDto>(entity);
         }
 
         public async Task<int> CreateAsync(DepartmentDto dto)
         {
             Validate(dto);
-            var entity = MapToEntity(dto);
+            var entity = _mapper.Map<Department>(dto);
             return await _repository.AddAsync(entity);
         }
 
         public async Task<bool> UpdateAsync(int id, DepartmentDto dto)
         {
             Validate(dto);
-            var entity = MapToEntity(dto);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return false;
+            _mapper.Map(dto, entity);
             entity.DepartmentId = id;
             return await _repository.UpdateAsync(entity);
         }
@@ -59,26 +64,6 @@ namespace His_Server.BLL.Services
             }
         }
 
-        private static DepartmentDto MapToDto(Department entity)
-        {
-            return new DepartmentDto
-            {
-                DepartmentId = entity.DepartmentId,
-                Name = entity.Name,
-                Description = entity.Description,
-                Location = entity.Location
-            };
-        }
-
-        private static Department MapToEntity(DepartmentDto dto)
-        {
-            return new Department
-            {
-                DepartmentId = dto.DepartmentId,
-                Name = dto.Name,
-                Description = dto.Description,
-                Location = dto.Location
-            };
-        }
+        // 映射逻辑由 AutoMapper 承担
     }
 }

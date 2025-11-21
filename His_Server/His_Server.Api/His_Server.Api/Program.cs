@@ -4,6 +4,7 @@ using SqlSugar;
 using His_Server.Model.EntityMap;
 using His_Server.BLL.Services;
 using His_Server.DAL.Repositories;
+using His_Server.BLL.Mapping;
 
 namespace His_Server.Api
 {
@@ -38,6 +39,8 @@ namespace His_Server.Api
 
 
             builder.Services.AddControllers();
+            // 注册 AutoMapper 并扫描 BLL 中的 Profile
+            builder.Services.AddAutoMapper(typeof(EntityProfiles).Assembly);
             // 配置SqlSugar数据库客户端（通过appsettings.json读取连接字符串）
             var connectionString = builder.Configuration.GetConnectionString("HisDbConnection");
             builder.Services.AddScoped<SqlSugarClient>(_ => new SqlSugarClient(new ConnectionConfig

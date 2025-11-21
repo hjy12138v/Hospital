@@ -1,6 +1,7 @@
 using His_Server.DAL.Repositories;
 using His_Server.Model.EntityDto;
 using His_Server.Model.EntityMap;
+using AutoMapper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,35 +14,39 @@ namespace His_Server.BLL.Services
     public class DoctorService : IDoctorService
     {
         private readonly IDoctorRepository _repository;
+        private readonly IMapper _mapper;
 
-        public DoctorService(IDoctorRepository repository)
+        public DoctorService(IDoctorRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
         public async Task<List<DoctorDto>> GetAllAsync()
         {
             var list = await _repository.GetAllAsync();
-            return list.Select(MapToDto).ToList();
+            return list.Select(d => _mapper.Map<DoctorDto>(d)).ToList();
         }
 
         public async Task<DoctorDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : MapToDto(entity);
+            return entity == null ? null : _mapper.Map<DoctorDto>(entity);
         }
 
         public async Task<int> CreateAsync(DoctorDto dto)
         {
             Validate(dto);
-            var entity = MapToEntity(dto);
+            var entity = _mapper.Map<Doctor>(dto);
             return await _repository.AddAsync(entity);
         }
 
         public async Task<bool> UpdateAsync(int id, DoctorDto dto)
         {
             Validate(dto);
-            var entity = MapToEntity(dto);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return false;
+            _mapper.Map(dto, entity);
             entity.DoctorId = id;
             return await _repository.UpdateAsync(entity);
         }
@@ -63,28 +68,6 @@ namespace His_Server.BLL.Services
             }
         }
 
-        private static DoctorDto MapToDto(Doctor entity)
-        {
-            return new DoctorDto
-            {
-                DoctorId = entity.DoctorId,
-                UserId = entity.UserId,
-                DepartmentId = entity.DepartmentId,
-                Position = entity.Position,
-                Specialty = entity.Specialty
-            };
-        }
-
-        private static Doctor MapToEntity(DoctorDto dto)
-        {
-            return new Doctor
-            {
-                DoctorId = dto.DoctorId,
-                UserId = dto.UserId,
-                DepartmentId = dto.DepartmentId,
-                Position = dto.Position,
-                Specialty = dto.Specialty
-            };
-        }
+        // 映射逻辑由 AutoMapper 承担
     }
 }
