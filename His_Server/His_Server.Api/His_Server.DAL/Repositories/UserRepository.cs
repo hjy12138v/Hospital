@@ -35,6 +35,17 @@ namespace His_Server.DAL.Repositories
         }
 
         /// <summary>
+        /// 通过用户名查询用户（若存在多条，返回第一条）
+        /// </summary>
+        public async Task<User?> GetByNameAsync(string name)
+        {
+            var list = await _db.Queryable<User>()
+                                 .Where(u => u.Name == name)
+                                 .ToListAsync();
+            return list.Count > 0 ? list[0] : null;
+        }
+
+        /// <summary>
         /// 新增用户，返回新记录的主键Id
         /// </summary>
         public async Task<int> AddAsync(User user)

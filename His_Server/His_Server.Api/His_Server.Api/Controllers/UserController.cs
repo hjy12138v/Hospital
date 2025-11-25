@@ -15,6 +15,10 @@ namespace His_Server.Api.Controllers
     {
         private readonly IUserService _userService;
 
+        /// <summary>
+        /// 构造函数依赖注入
+        /// </summary>
+        /// <param name="userService"></param>
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -86,6 +90,21 @@ namespace His_Server.Api.Controllers
                 DateOfBirth = r.DateOfBirth
             };
         }
+
+        /// <summary>
+        /// 用户登录验证：验证 Name 与 Password。
+        /// 成功返回用户基本信息，失败返回 401。
+        /// </summary>
+        [HttpPost("login")]
+        public async Task<IActionResult> UserLogin([FromBody] UserLoginRequest request)
+        {
+            var user = await _userService.UserLoginAsync(request.Name, request.Password);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "用户名或密码错误" });
+            }
+            return Ok(user);
+        }
     }
 
     /// <summary>
@@ -96,6 +115,15 @@ namespace His_Server.Api.Controllers
         /// <summary>
         /// 明文密码（示例项目使用，生产环境请做加密与安全处理）
         /// </summary>
+        public string Password { get; set; }
+    }
+
+    /// <summary>
+    /// 用户登录请求模型。
+    /// </summary>
+    public class UserLoginRequest
+    {
+        public string Name { get; set; }
         public string Password { get; set; }
     }
 }

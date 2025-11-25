@@ -62,6 +62,20 @@ namespace His_Server.BLL.Services
             return await _repository.DeleteAsync(id);
         }
 
+        public async Task<UserDto?> UserLoginAsync(string name, string password)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(password))
+                throw new System.ArgumentException("用户名和密码不能为空");
+
+            var user = await _repository.GetByNameAsync(name);
+            if (user == null) return null;
+
+            // 简单明文校验（示例）；生产环境请使用哈希比较
+            if (!string.Equals(user.Password, password)) return null;
+
+            return _mapper.Map<UserDto>(user);
+        }
+
         // 映射逻辑已由 AutoMapper 承担
     }
 }
