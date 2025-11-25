@@ -34,19 +34,6 @@
           />
         </el-form-item>
 
-        <el-form-item prop="role">
-          <el-select
-            v-model="loginForm.role"
-            placeholder="请选择登录身份"
-            size="large"
-            style="width: 100%"
-          >
-            <el-option label="管理员" value="admin" />
-            <el-option label="医生" value="doctor" />
-            <el-option label="患者" value="user" />
-          </el-select>
-        </el-form-item>
-
         <el-form-item>
           <el-button
             type="primary"
@@ -61,19 +48,19 @@
       </el-form>
 
       <div class="demo-accounts">
-        <h4>演示账号</h4>
+        <h4>示例账号</h4>
         <div class="account-list">
-          <div class="account-item" @click="fillAccount('admin', '123456')">
+          <div class="account-item" @click="fillAccount('赵子龙', '50000005')">
             <el-tag type="danger">管理员</el-tag>
-            <span>admin / 123456</span>
+            <span>赵子龙 / 50000005</span>
           </div>
-          <div class="account-item" @click="fillAccount('doctor1', '123456')">
+          <div class="account-item" @click="fillAccount('李浩然', '30000003')">
             <el-tag type="warning">医生</el-tag>
-            <span>doctor1 / 123456</span>
+            <span>李浩然 / 30000003</span>
           </div>
-          <div class="account-item" @click="fillAccount('user1', '123456')">
-            <el-tag type="success">患者</el-tag>
-            <span>user1 / 123456</span>
+          <div class="account-item" @click="fillAccount('张晨曦', '20000002')">
+            <el-tag type="success">用户</el-tag>
+            <span>张晨曦 / 20000002</span>
           </div>
         </div>
       </div>
@@ -87,7 +74,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { authAPI } from '@/api'
+import http from '@/api/http'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -98,34 +85,19 @@ const loading = ref(false)
 const loginForm = reactive({
   username: '',
   password: '',
-  role: ''
 })
 
 const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
-  ],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
   ],
-  role: [
-    { required: true, message: '请选择登录身份', trigger: 'change' }
-  ]
 }
 
 const fillAccount = (username: string, password: string) => {
   loginForm.username = username
   loginForm.password = password
-
-  // 根据用户名自动选择角色
-  if (username === 'admin') {
-    loginForm.role = 'admin'
-  } else if (username.startsWith('doctor')) {
-    loginForm.role = 'doctor'
-  } else if (username.startsWith('user')) {
-    loginForm.role = 'user'
-  }
 }
 
 const handleLogin = async () => {
@@ -135,32 +107,38 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
 
-    const response = await authAPI.login(loginForm.username, loginForm.password)
+    // 调用后端登录验证接口（返回 UserDto）
+    const res = await http.post('http://localhost:5090/api/User/login', {
+      name: loginForm.username,
+      password: loginForm.password,
+    })
 
-    // 验证角色是否匹配
-    if (response.data.user.role !== loginForm.role) {
-      ElMessage.error('登录身份与账号角色不匹配')
-      return
-    }
+    // 规范化后的字段：id, name, gender, phoneNumber, email, roleId, dateOfBirth
+    const roleId: number = Number((res as any).roleId ?? 0)
+    const role = roleId === 3 ? 'admin' : roleId === 2 ? 'doctor' : 'user'
 
-    // 保存登录状态
-    authStore.login(response.data.user, response.data.token)
+    // 保存登录状态（无后端token，使用占位）
+    authStore.login(
+      {
+        id: (res as any).id,
+        username: (res as any).name,
+        role,
+        name: (res as any).name,
+        email: (res as any).email ?? '',
+        phone: (res as any).phoneNumber ?? '',
+      },
+      'session',
+    )
 
     ElMessage.success('登录成功')
 
     // 根据角色跳转到不同页面
-    switch (response.data.user.role) {
-      case 'admin':
-        router.push('/admin/dashboard')
-        break
-      case 'doctor':
-        router.push('/doctor/dashboard')
-        break
-      case 'user':
-        router.push('/user/dashboard')
-        break
-      default:
-        router.push('/')
+    if (role === 'admin') {
+      router.push('/admin/dashboard')
+    } else if (role === 'doctor') {
+      router.push('/doctor/dashboard')
+    } else {
+      router.push('/user/dashboard')
     }
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')
